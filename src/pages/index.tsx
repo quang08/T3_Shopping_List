@@ -5,16 +5,30 @@ import { useState } from "react";
 import ItemModal from "~/components/ItemModal";
 
 import { api } from "~/utils/api";
+import Item from "~/components/Item";
+
+const Feed = () => {
+  const [items, setItems] = useState<shoppingItem[]>([]);
+  const { data: itemsData, isLoading } = api.itemRouter.getAllItems.useQuery();
+
+  if (isLoading || !itemsData) return <div>Loading...</div>;
+
+  return (
+    <ul className="mt-4 space-y-3">
+      {itemsData.map((item) => {
+        const { id } = item;
+        return (
+          <Item item={item} key={item.id} setItems={setItems} id={id}/>
+        );
+      })}
+    </ul>
+  );
+};
 
 const Home: NextPage = () => {
-  const [items, setItems] = useState<shoppingItem[]>([]);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
 
-  const {} = api.itemRouter.addItem.useMutation({
-    onSuccess: (item) => {
-      setItems((prev) => [...prev, item]);
-    },
-  });
+  api.itemRouter.getAllItems.useQuery();
 
   return (
     <>
@@ -24,27 +38,23 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      {modalOpen && <ItemModal setModalOpen={setModalOpen} setItems={setItems} />}
+      {modalOpen && (
+        <ItemModal setModalOpen={setModalOpen} />
+      )}
 
       <main className="mx-auto my-12 max-w-3xl">
         <div className="flex justify-between">
-          <h2 className="text-2xl font-semibold">My Shopping List</h2>
+          <h2 className="text-3xl font-semibold">My Shopping List</h2>
           <button
             type="button"
-            className="rounded-md bg-blue-500 p-2 text-white transition duration-300 hover:bg-blue-600"
+            className="rounded-md bg-blue-500 p-2 text-white text-lg transition duration-300 hover:bg-blue-600"
             onClick={() => setModalOpen(true)}
           >
             Add Shopping Item
           </button>
         </div>
 
-        <ul className="mt-4">
-          {items.map((item) => (
-            <li className="flex items-center justify-center" key={item.id}>
-              <span>{item.name}</span>
-            </li>
-          ))}
-        </ul>
+        <Feed />
       </main>
     </>
   );
